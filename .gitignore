@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ML Weights & Large Datasets (Save scripts, not gigabytes of binaries in git)
+*.pt
+*.pth
+*.onnx
+*.bin
+*.h5
+*.ckpt
+data/images/train/*/*
+data/images/validation/*/*
+data/images/test/*/*
+!data/images/**/.gitkeep
+data/text/train/*
+data/text/validation/*
+data/text/test/*
+!data/text/**/.gitkeep
+backend/ml/image_model/saved_models/*.pt
+!backend/ml/image_model/saved_models/.gitkeep
+backend/ml/text_model/saved_models/*.pt
+!backend/ml/text_model/saved_models/.gitkeep
+
+# Environment variables
+.env
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# IDEs & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
