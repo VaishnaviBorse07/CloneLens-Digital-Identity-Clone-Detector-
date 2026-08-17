@@ -64,9 +64,18 @@ class AnalysisService:
         return response_data
 
     @staticmethod
-    def process_text(text: str, db: Optional[Session] = None) -> Dict[str, Any]:
+    def process_text(
+        text: str,
+        provider: Optional[str] = None,
+        model_name: Optional[str] = None,
+        db: Optional[Session] = None
+    ) -> Dict[str, Any]:
         """Analyzes text and generates a unimodal assessment."""
-        txt_result = text_engine.analyze_text(text)
+        txt_result = text_engine.analyze_text(
+            text=text,
+            provider_override=provider,
+            model_override=model_name
+        )
         fusion_out = fusion_engine.fuse_predictions(image_result=None, text_result=txt_result)
         
         analysis_id = str(uuid.uuid4())
@@ -118,11 +127,17 @@ class AnalysisService:
         image_bytes: bytes,
         filename: str,
         text: str,
+        provider: Optional[str] = None,
+        model_name: Optional[str] = None,
         db: Optional[Session] = None
     ) -> Dict[str, Any]:
         """Analyzes both facial image and text, fusing them with the Decision Fusion Engine."""
         img_result = image_engine.analyze_image_bytes(image_bytes, filename=filename)
-        txt_result = text_engine.analyze_text(text)
+        txt_result = text_engine.analyze_text(
+            text=text,
+            provider_override=provider,
+            model_override=model_name
+        )
         fusion_out = fusion_engine.fuse_predictions(image_result=img_result, text_result=txt_result)
 
         analysis_id = str(uuid.uuid4())

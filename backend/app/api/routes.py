@@ -48,13 +48,15 @@ async def check_health(db: Session = Depends(get_db)):
     )
 
     # 3. Check Text NLP / LLM status
+    has_api_key = bool(settings.LLM_API_KEY or settings.GEMINI_API_KEY or settings.OPENAI_API_KEY or settings.GROQ_API_KEY)
+    provider_status = "Ready (Active API)" if (settings.LLM_PROVIDER != "mock" and has_api_key) else "Ready (Offline Stylometrics)"
     text_model_info = ModelHealthInfo(
-        name=f"CloneLens NLP Suite + {settings.LLM_PROVIDER.upper()} Provider",
-        type="Statistical NLP + LLM Heuristics",
-        status="Ready",
+        name=f"CloneLens Multi-Provider NLP Forensics ({settings.LLM_PROVIDER.upper()})",
+        type="Statistical Stylometrics + LLM Forensics",
+        status=provider_status,
         weights_path=None,
         weights_loaded=True,
-        details=f"Configured provider: {settings.LLM_PROVIDER}"
+        details=f"Active Provider: {settings.LLM_PROVIDER} | Model: {settings.LLM_MODEL_NAME} | Key Configured: {has_api_key}"
     )
 
     # 4. Check Decision Fusion Engine
@@ -119,9 +121,14 @@ async def analyze_text(
     payload: TextAnalysisRequest,
     db: Session = Depends(get_db)
 ):
-    """Analyze a text snippet for AI generation / synthetic writing indicators."""
+    """Analyze a text snippet for AI generation / synthetic writing indicators using LLM and stylometrics."""
     try:
-        result = AnalysisService.process_text(text=payload.text, db=db)
+        result = AnalysisService.process_text(
+            text=payload.text,
+            provider=payload.provider,
+            model_name=payload.model_name,
+            db=db
+        )
         return result
     except Exception as e:
         raise HTTPException(
@@ -134,6 +141,8 @@ async def analyze_text(
 async def analyze_multimodal(
     file: UploadFile = File(...),
     text: str = Form(...),
+    provider: Optional[str] = Form(None),
+    model_name: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     """Analyze both a facial image and associated text using the Decision Fusion Engine."""
@@ -162,6 +171,8 @@ async def analyze_multimodal(
             image_bytes=contents,
             filename=file.filename,
             text=text,
+            provider=provider,
+            model_name=model_name,
             db=db
         )
         return result

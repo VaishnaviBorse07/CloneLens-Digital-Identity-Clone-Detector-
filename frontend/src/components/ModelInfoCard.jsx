@@ -34,14 +34,16 @@ export default function ModelInfoCard({ health }) {
         <div className="arch-card">
           <div className="arch-card-title">
             <Network size={16} className="text-indigo-primary" />
-            <h4>NLP & Stylometric Suite</h4>
+            <h4>Multi-Provider LLM & NLP Suite</h4>
           </div>
           <p className="arch-desc">
-            Extracts Shannon entropy, sentence-length burstiness, vocabulary richness (TTR), and archetype transition markers with modular LLM provider interface.
+            {health?.models?.text_nlp_llm?.details || 'Extracts Shannon entropy, sentence-length burstiness, vocabulary richness (TTR), and AI transition markers with Gemini / OpenAI / Groq / Local LLM providers.'}
           </p>
           <div className="arch-status-row">
             <span className="text-xs text-muted">Status:</span>
-            <span className="badge badge-success">Ready (Deterministic)</span>
+            <span className="badge badge-success">
+              {health?.models?.text_nlp_llm?.status || 'Ready (Multi-Provider)'}
+            </span>
           </div>
         </div>
 

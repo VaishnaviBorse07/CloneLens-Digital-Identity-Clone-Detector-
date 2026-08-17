@@ -47,6 +47,8 @@ class ImageAnalysisResult(BaseModel):
 # -----------------------------------------------------------------------------
 class TextAnalysisRequest(BaseModel):
     text: str = Field(..., min_length=5, max_length=15000, description="Text snippet to analyze")
+    provider: Optional[str] = Field(None, description="Optional provider override: 'gemini', 'openai', 'groq', 'huggingface', 'ollama', 'mock'")
+    model_name: Optional[str] = Field(None, description="Optional model override (e.g. 'gemini-1.5-flash', 'gpt-4o-mini')")
 
 
 class TextAnalysisResult(BaseModel):
@@ -58,6 +60,7 @@ class TextAnalysisResult(BaseModel):
     provider: str
     processing_time_ms: float
     linguistic_features: Optional[Dict[str, Any]] = None
+    forensic_details: Optional[Dict[str, Any]] = None
     explanation: str
 
 

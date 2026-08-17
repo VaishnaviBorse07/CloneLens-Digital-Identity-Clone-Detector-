@@ -1,6 +1,5 @@
-"""CloneLens Core Configuration Module"""
 import os
-from typing import List, Union
+from typing import List, Union, Optional
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -35,10 +34,18 @@ class Settings(BaseSettings):
     FUSION_THRESHOLD_AUTHENTIC: float = 0.70
     FUSION_THRESHOLD_FAKE: float = 0.40
 
-    # LLM / Text Model
-    LLM_PROVIDER: str = "mock"
+    # LLM / Text Model & Multi-Provider Settings
+    LLM_PROVIDER: str = "mock"  # Options: mock, gemini, openai, groq, huggingface, ollama
     LLM_API_KEY: str = ""
-    LLM_MODEL_NAME: str = "gpt-4o-mini"
+    LLM_MODEL_NAME: str = "gemini-1.5-flash"
+    LLM_BASE_URL: Optional[str] = None
+    LLM_FALLBACK_TO_MOCK: bool = True
+    
+    # Provider-Specific Key Aliases
+    GEMINI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
+    GROQ_API_KEY: Optional[str] = None
+    HUGGINGFACE_API_KEY: Optional[str] = None
 
     # Uploads & Security
     MAX_UPLOAD_SIZE_MB: int = 10
