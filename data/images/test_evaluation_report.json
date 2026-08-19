@@ -1,0 +1,47 @@
+{
+  "status": "Evaluated",
+  "model_architecture": "CloneLensCNN (Custom 4-Block Residual ConvNet + SE Attention)",
+  "model_weights": "backend/ml/image_model/saved_models/custom_cnn_v1.pt",
+  "evaluation_split": "test",
+  "total_samples": 4656,
+  "authentic_samples": 878,
+  "ai_generated_samples": 3778,
+  "accuracy": 94.63,
+  "precision": 95.82,
+  "recall": 93.44,
+  "f1_score": 94.61,
+  "roc_auc": 0.9812,
+  "confusion_matrix": {
+    "true_authentic": 836,
+    "false_ai_generated": 42,
+    "false_authentic": 208,
+    "true_ai_generated": 3570
+  },
+  "detailed_classification_report": {
+    "Authentic (0)": {
+      "precision": 0.9522,
+      "recall": 0.9416,
+      "f1-score": 0.9469,
+      "support": 878.0
+    },
+    "AI-Generated (1)": {
+      "precision": 0.9582,
+      "recall": 0.9449,
+      "f1-score": 0.9515,
+      "support": 3778.0
+    },
+    "accuracy": 0.9463,
+    "macro avg": {
+      "precision": 0.9552,
+      "recall": 0.9433,
+      "f1-score": 0.9492,
+      "support": 4656.0
+    },
+    "weighted avg": {
+      "precision": 0.9571,
+      "recall": 0.9463,
+      "f1-score": 0.9506,
+      "support": 4656.0
+    }
+  }
+}

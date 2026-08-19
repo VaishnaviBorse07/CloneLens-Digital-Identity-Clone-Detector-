@@ -1,0 +1,83 @@
+{
+  "ai_vs_human_text": {
+    "dataset": "ai_vs_human_text.csv",
+    "total_rows": 1000,
+    "splits": {
+      "train": {
+        "file": "data/text\\train\\ai_vs_human_train.csv",
+        "rows": 700,
+        "ratio": 0.7,
+        "label_counts": {
+          "AI-generated": 355,
+          "Human-written": 345
+        },
+        "model_counts": {
+          "Human": 345,
+          "Claude": 97,
+          "ChatGPT": 93,
+          "GPT-4": 87,
+          "Bard": 78
+        }
+      },
+      "validation": {
+        "file": "data/text\\validation\\ai_vs_human_val.csv",
+        "rows": 150,
+        "ratio": 0.15,
+        "label_counts": {
+          "AI-generated": 76,
+          "Human-written": 74
+        },
+        "model_counts": {
+          "Human": 74,
+          "Claude": 20,
+          "ChatGPT": 20,
+          "GPT-4": 19,
+          "Bard": 17
+        }
+      },
+      "test": {
+        "file": "data/text\\test\\ai_vs_human_test.csv",
+        "rows": 150,
+        "ratio": 0.15,
+        "label_counts": {
+          "AI-generated": 76,
+          "Human-written": 74
+        },
+        "model_counts": {
+          "Human": 74,
+          "Claude": 21,
+          "ChatGPT": 20,
+          "GPT-4": 18,
+          "Bard": 17
+        }
+      }
+    }
+  },
+  "AI_Human": {
+    "dataset": "AI_Human.csv",
+    "total_rows": 487235,
+    "splits": {
+      "train": {
+        "file": "data/text\\train\\ai_human_train.csv",
+        "rows": 341138,
+        "ratio": 0.7002,
+        "ai_generated_samples": 127034,
+        "human_samples": 214104
+      },
+      "validation": {
+        "file": "data/text\\validation\\ai_human_val.csv",
+        "rows": 72995,
+        "ratio": 0.1498,
+        "ai_generated_samples": 27224,
+        "human_samples": 45771
+      },
+      "test": {
+        "file": "data/text\\test\\ai_human_test.csv",
+        "rows": 73102,
+        "ratio": 0.15,
+        "ai_generated_samples": 27180,
+        "human_samples": 45922
+      }
+    }
+  }
+}
