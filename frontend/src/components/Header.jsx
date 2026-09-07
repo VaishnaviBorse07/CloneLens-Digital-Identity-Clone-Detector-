@@ -1,26 +1,24 @@
 import React from 'react';
-import { 
-  ShieldCheck, 
-  Scan, 
-  RefreshCw, 
-  Sun, 
-  Moon, 
-  FileCode, 
-  Info, 
-  Mail, 
-  Home, 
-  Layers, 
-  CheckCircle2, 
-  AlertCircle,
+import {
+  ShieldCheck,
+  Scan,
+  RefreshCw,
+  Sun,
+  Moon,
+  FileCode,
+  Info,
+  Mail,
+  Home,
+  Layers,
   Menu,
   X
 } from 'lucide-react';
 
-export default function Header({ 
-  health, 
-  loadingHealth, 
-  onRefreshHealth, 
-  theme, 
+export default function Header({
+  health,
+  loadingHealth,
+  onRefreshHealth,
+  theme,
   onToggleTheme,
   activeNav,
   onNavClick,
@@ -33,143 +31,159 @@ export default function Header({
   return (
     <header className="site-header">
       <div className="header-inner">
-        {/* Brand / Logo */}
-        <div className="brand-group" onClick={() => onNavClick('home')} role="button" tabIndex={0}>
+        {/* ── Brand ── */}
+        <div
+          className="brand-group"
+          onClick={() => onNavClick('home')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && onNavClick('home')}
+        >
           <div className="brand-icon-wrapper">
             <div className="icon-reticle">
-              <Scan className="reticle-frame" size={26} />
-              <ShieldCheck className="reticle-center" size={16} />
+              <Scan className="reticle-frame" size={24} />
+              <ShieldCheck className="reticle-center" size={13} />
             </div>
-            <div className="icon-glow-ring"></div>
           </div>
 
           <div className="brand-text-block">
-            <div className="brand-title-row">
-              <span className="brand-title">CloneLens</span>
-            </div>
-            <div className="brand-divider"></div>
-            <span className="brand-tagline">AI-Powered Identity &amp; Synthetic Media Detector</span>
+            <span
+              className="brand-title"
+              title="CloneLens: Digital Identity Clone Detection Using Multimodal Image and Text Analysis"
+            >
+              CloneLens
+            </span>
+            <div className="brand-divider" />
+            <span className="brand-tagline">
+              Digital Identity Clone Detection
+            </span>
           </div>
         </div>
 
-        {/* Desktop Navigation */}
+        {/* ── Desktop Nav ── */}
         <nav className="desktop-nav" aria-label="Main Navigation">
-          <button 
+          <button
             type="button"
             className={`nav-item ${activeNav === 'home' ? 'nav-item-active' : ''}`}
             onClick={() => onNavClick('home')}
+            id="nav-home"
           >
-            <Home size={15} />
+            <Home size={14} />
             <span>Home</span>
           </button>
-          <button 
+          <button
             type="button"
             className={`nav-item ${activeNav === 'about' ? 'nav-item-active' : ''}`}
-            onClick={() => onOpenModal('about')}
+            onClick={() => { onNavClick('about'); onOpenModal('about'); }}
+            id="nav-about"
           >
-            <Info size={15} />
+            <Info size={14} />
             <span>About</span>
           </button>
-          <button 
+          <button
             type="button"
             className={`nav-item ${activeNav === 'docs' ? 'nav-item-active' : ''}`}
-            onClick={() => onOpenModal('docs')}
+            onClick={() => { onNavClick('docs'); onOpenModal('docs'); }}
+            id="nav-docs"
           >
-            <FileCode size={15} />
+            <FileCode size={14} />
             <span>Docs</span>
           </button>
-          <button 
+          <button
             type="button"
             className={`nav-item ${activeNav === 'contact' ? 'nav-item-active' : ''}`}
-            onClick={() => onOpenModal('contact')}
+            onClick={() => { onNavClick('contact'); onOpenModal('contact'); }}
+            id="nav-contact"
           >
-            <Mail size={15} />
+            <Mail size={14} />
             <span>Contact</span>
           </button>
         </nav>
 
-        {/* Right Status & Controls */}
+        {/* ── Right Controls ── */}
         <div className="header-actions">
           {/* Backend Status Pill */}
-          <div 
+          <div
             className={`backend-pill ${isOnline ? 'pill-online' : 'pill-offline'}`}
-            title={`Backend Status: ${isOnline ? 'Connected' : 'Offline'} (${latency}ms)`}
+            title={`Backend ${isOnline ? 'Online' : 'Offline'} — ${latency}ms`}
           >
             <span className="pill-dot">
-              <span className="pill-dot-ping"></span>
+              <span className="pill-dot-ping" />
             </span>
             <span className="pill-text">
-              {isOnline ? 'Backend Online' : 'Backend Offline'}
+              {isOnline ? `Online · ${latency}ms` : 'Offline'}
             </span>
-            <button 
+            <button
               type="button"
               className="pill-refresh-btn"
               onClick={(e) => { e.stopPropagation(); onRefreshHealth(); }}
-              title="Ping Backend Health"
+              title="Ping backend health"
               disabled={loadingHealth}
+              aria-label="Refresh backend status"
             >
-              <RefreshCw size={13} className={loadingHealth ? 'animate-spin' : ''} />
+              <RefreshCw size={12} className={loadingHealth ? 'animate-spin' : ''} />
             </button>
           </div>
 
-          {/* Theme Toggle Button */}
-          <button 
+          {/* Theme Toggle */}
+          <button
             type="button"
             className="theme-toggle-btn"
             onClick={onToggleTheme}
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Cyber Dark'} mode`}
-            aria-label="Toggle theme"
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+            aria-label="Toggle color theme"
+            id="theme-toggle"
           >
-            {theme === 'dark' ? (
-              <Sun size={17} className="text-amber-400" />
-            ) : (
-              <Moon size={17} className="text-indigo-400" />
-            )}
+            {theme === 'dark'
+              ? <Sun size={16} className="text-amber-400" />
+              : <Moon size={16} className="text-indigo-400" />
+            }
           </button>
 
-          {/* Mobile Hamburger Toggle */}
-          <button 
+          {/* Mobile Hamburger */}
+          <button
             type="button"
             className="mobile-menu-btn"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
+            aria-label="Toggle mobile menu"
+            id="mobile-menu-toggle"
           >
-            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileMenuOpen ? <X size={19} /> : <Menu size={19} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer Navigation */}
+      {/* ── Mobile Drawer ── */}
       {mobileMenuOpen && (
-        <div className="mobile-nav-drawer glass-panel">
-          <button 
-            type="button" 
+        <div className="mobile-nav-drawer">
+          <button
+            type="button"
             className={`mobile-nav-item ${activeNav === 'home' ? 'active' : ''}`}
             onClick={() => { onNavClick('home'); setMobileMenuOpen(false); }}
           >
             <Home size={16} />
             <span>Home</span>
           </button>
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="mobile-nav-item"
-            onClick={() => { onOpenModal('about'); setMobileMenuOpen(false); }}
+            onClick={() => { onNavClick('about'); onOpenModal('about'); setMobileMenuOpen(false); }}
           >
             <Info size={16} />
             <span>About</span>
           </button>
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="mobile-nav-item"
-            onClick={() => { onOpenModal('docs'); setMobileMenuOpen(false); }}
+            onClick={() => { onNavClick('docs'); onOpenModal('docs'); setMobileMenuOpen(false); }}
           >
             <FileCode size={16} />
-            <span>Docs</span>
+            <span>Documentation</span>
           </button>
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="mobile-nav-item"
-            onClick={() => { onOpenModal('contact'); setMobileMenuOpen(false); }}
+            onClick={() => { onNavClick('contact'); onOpenModal('contact'); setMobileMenuOpen(false); }}
           >
             <Mail size={16} />
             <span>Contact</span>
