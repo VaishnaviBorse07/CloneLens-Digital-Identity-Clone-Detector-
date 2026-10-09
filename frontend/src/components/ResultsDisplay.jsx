@@ -1,408 +1,599 @@
-import React, { useState } from 'react';
-import { 
-  ShieldCheck, 
-  ShieldAlert, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Clock, 
-  Cpu, 
-  Layers, 
-  FileText, 
-  Info, 
-  Scale, 
-  Download, 
-  Share2, 
-  Activity, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Cpu,
+  Layers,
+  FileText,
+  Info,
+  Scale,
+  Download,
+  Share2,
+  Activity,
   Eye,
   Settings2,
   ChevronDown,
   ChevronUp,
-  Image as ImageIcon
+  Image as ImageIcon,
+  BarChart2,
 } from 'lucide-react';
 
+/* ────────────────────────────────────────────────────────────
+   Circular SVG Score Ring
+   ─────────────────────────────────────────────────────────── */
+function ScoreRing({ score, colorClass, label }) {
+  const RADIUS = 80;
+  const CIRC   = 2 * Math.PI * RADIUS;
+  const pct    = Math.min(Math.max(score, 0), 100);
+  const offset = CIRC - (pct / 100) * CIRC;
+
+  const [animOffset, setAnimOffset] = useState(CIRC);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setAnimOffset(offset));
+    return () => cancelAnimationFrame(raf);
+  }, [offset]);
+
+  const strokeColor = colorClass === 'ring-human'
+    ? 'url(#emeraldGrad)'
+    : colorClass === 'ring-moderate'
+      ? 'url(#amberGrad)'
+      : 'url(#roseGrad)';
+
+  const textColor = colorClass === 'ring-human'
+    ? 'var(--emerald-bright)'
+    : colorClass === 'ring-moderate'
+      ? 'var(--amber-warning)'
+      : 'var(--rose-bright)';
+
+  return (
+    <div className="score-ring-section">
+      <div className="score-ring-wrapper">
+        <svg
+          className="score-ring-svg"
+          viewBox="0 0 200 200"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+            <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+            <linearGradient id="roseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+          </defs>
+
+          {/* Track */}
+          <circle
+            className="score-ring-track"
+            cx="100" cy="100" r={RADIUS}
+            strokeWidth="10"
+          />
+          {/* Filled arc */}
+          <circle
+            cx="100" cy="100" r={RADIUS}
+            strokeWidth="10"
+            stroke={strokeColor}
+            strokeLinecap="round"
+            strokeDasharray={`${CIRC}`}
+            strokeDashoffset={animOffset}
+            fill="none"
+            style={{
+              transition: 'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1)',
+              filter: `drop-shadow(0 0 10px ${textColor})`,
+            }}
+          />
+        </svg>
+
+        {/* Center text */}
+        <div className="score-ring-center">
+          <span className="score-ring-value" style={{ color: textColor }}>
+            {pct.toFixed(0)}%
+          </span>
+          <span className="score-ring-label">{label}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   Main ResultsDisplay
+   ─────────────────────────────────────────────────────────── */
 export default function ResultsDisplay({ result, onReset }) {
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'heatmap', 'stylometrics', 'fusion'
-  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab]           = useState('overview');
+  const [copied, setCopied]                 = useState(false);
 
-  // If no result is passed yet, don't show the component or show a placeholder message
+  // ── Standby State ──
   if (!result) {
     return (
-      <div className="glass-panel results-display-card flex items-center justify-center min-h-[400px]">
-        <div className="text-center text-muted" style={{ padding: '4rem 0', opacity: 0.6 }}>
-          <Activity size={32} className="mx-auto mb-3 text-cyan-primary animate-pulse" />
-          <p>Awaiting media to verify...</p>
+      <div
+        className="glass-panel results-display-card flex flex-col items-center justify-center text-center"
+        style={{ minHeight: '460px', padding: '2.5rem' }}
+      >
+        <div
+          style={{
+            width: 64, height: 64, borderRadius: 16,
+            background: 'rgba(6,182,212,0.08)',
+            border: '1px solid rgba(6,182,212,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '1.25rem',
+            boxShadow: '0 0 24px rgba(6,182,212,0.12)',
+          }}
+        >
+          <Activity size={30} style={{ color: 'var(--cyan-primary)' }} className="animate-pulse" />
+        </div>
+        <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+          Awaiting Forensic Analysis
+        </h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', maxWidth: 360, lineHeight: 1.65, marginBottom: '1.5rem' }}>
+          Upload a facial image or text sample in the verification workspace and click{' '}
+          <strong style={{ color: 'var(--cyan-bright)' }}>Analyze Content</strong> to run deep neural forensics.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+          {['PyTorch CNN Ready', 'NLP Stylometrics Ready', 'Decision Fusion Ready'].map((s) => (
+            <span
+              key={s}
+              style={{
+                padding: '0.28rem 0.8rem',
+                borderRadius: 9999,
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                fontSize: '0.73rem',
+                fontWeight: 600,
+                color: 'var(--text-muted)',
+                display: 'flex', alignItems: 'center', gap: '0.4rem',
+              }}
+            >
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--emerald-bright)', display: 'inline-block' }} />
+              {s}
+            </span>
+          ))}
         </div>
       </div>
     );
   }
 
+  // ── Destructure Result ──
   const {
-    final_prediction = "Moderate",
-    confidence_percent = 0,
     authenticity_score_percent = 0,
+    confidence_percent         = 0,
     image_analysis,
     text_analysis,
     decision_fusion,
-    explanation = "No explanation provided by backend.",
-    input_type = "unknown"
+    explanation = '',
+    input_type  = 'unknown',
+    overall_risk,
   } = result;
 
-  // 3-Tier Classification Thresholds:
-  // >= 70%: Human-Generated (Authentic / Natural)
-  // 50% - 70%: Moderate (Mixed / Inconclusive)
-  // < 50%: AI-Generated (Synthetic / Clone)
-  const score = typeof authenticity_score_percent === 'number' 
-    ? authenticity_score_percent 
-    : parseFloat(authenticity_score_percent) || 0;
-  
-  const isHumanGenerated = score >= 70;
-  const isModerate = score >= 50 && score < 70;
-  const isAIGenerated = score < 50;
+  const score       = typeof authenticity_score_percent === 'number'
+    ? authenticity_score_percent : parseFloat(authenticity_score_percent) || 0;
+  const aiProb      = 100 - score;
+  const isHuman     = score >= 70;
+  const isModerate  = score >= 50 && score < 70;
+  const isAI        = score < 50;
+  const risk        = overall_risk || (isAI ? 'High' : isModerate ? 'Moderate' : 'Low');
+  const verdictText = isHuman ? 'Human-Generated' : isModerate ? 'Moderate' : 'AI-Generated';
+  const ringClass   = isHuman ? 'ring-human' : isModerate ? 'ring-moderate' : 'ring-ai';
 
-  // Compute metrics based on calibrated 3-tier thresholds
-  const aiProbability = 100 - score;
-  const mediaAuthenticity = score;
-  const overallRisk = isAIGenerated ? 'High' : isModerate ? 'Moderate' : 'Low';
-
-  // Helper for unimodal sub-scores
-  const getTierForScore = (val) => {
+  const getTier = (val) => {
     if (val >= 0.70) return { label: 'Human-Generated', type: 'human' };
-    if (val >= 0.50) return { label: 'Moderate', type: 'moderate' };
-    return { label: 'AI-Generated', type: 'ai' };
+    if (val >= 0.50) return { label: 'Moderate',        type: 'moderate' };
+    return               { label: 'AI-Generated',       type: 'ai' };
   };
 
-  const imgScore = image_analysis?.authenticity_probability ?? (image_analysis?.prediction?.toLowerCase().includes('ai') ? 0.2 : 0.8);
-  const imgTier = getTierForScore(imgScore);
+  const imgScore = image_analysis?.authenticity_probability
+    ?? (image_analysis?.prediction?.toLowerCase().includes('ai') ? 0.18 : 0.88);
+  const imgTier  = getTier(imgScore);
+  const txtScore = text_analysis?.authenticity_probability
+    ?? (text_analysis?.prediction?.toLowerCase().includes('ai') ? 0.18 : 0.88);
+  const txtTier  = getTier(txtScore);
 
-  const txtScore = text_analysis?.authenticity_probability ?? (text_analysis?.prediction?.toLowerCase().includes('ai') ? 0.2 : 0.8);
-  const txtTier = getTierForScore(txtScore);
+  const tierColor = (type) =>
+    type === 'ai' ? 'var(--rose-bright)' : type === 'human' ? 'var(--emerald-bright)' : 'var(--amber-warning)';
 
+  const tierBg = (type) =>
+    type === 'ai' ? 'var(--rose-bg)' : type === 'human' ? 'var(--emerald-bg)' : 'var(--amber-bg)';
+
+  const tierBorder = (type) =>
+    type === 'ai' ? 'var(--rose-border)' : type === 'human' ? 'var(--emerald-border)' : 'var(--amber-border)';
+
+  // Simple explanation
+  let simpleExpl = '';
+  if (isAI)       simpleExpl = 'Strong AI-generated patterns detected (< 50% authenticity). This content was likely synthesized by an AI model.';
+  else if (isModerate) simpleExpl = 'Mixed indicators detected (50–70% authenticity). Content exhibits both human-like and synthetic traits.';
+  else            simpleExpl = 'Natural human patterns confirmed (≥ 70% authenticity). Content is consistent with genuine human authorship.';
+
+  // Report actions
   const handleCopyReport = () => {
-    const tierName = isHumanGenerated ? 'Human-Generated (>=70%)' : isModerate ? 'Moderate (50-70%)' : 'AI-Generated (<50%)';
-    const reportText = `CloneLens Verification Report\nVerdict: ${isHumanGenerated ? 'Human-Generated' : isModerate ? 'Moderate' : 'AI-Generated'}\nThreshold Tier: ${tierName}\nAuthenticity Score: ${score.toFixed(1)}%\nAI Likelihood: ${aiProbability.toFixed(1)}%\nRisk Level: ${overallRisk}\nTimestamp: ${new Date().toLocaleString()}`;
-    navigator.clipboard.writeText(reportText);
+    const text = [
+      'CloneLens Verification Report',
+      `Verdict: ${verdictText}`,
+      `Authenticity Score: ${score.toFixed(1)}%`,
+      `AI Likelihood: ${aiProb.toFixed(1)}%`,
+      `Risk Level: ${risk}`,
+      `Analysis ID: ${result.analysis_id || 'N/A'}`,
+      `Timestamp: ${new Date().toLocaleString()}`,
+    ].join('\n');
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
 
   const handleDownloadJSON = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(result, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `clonelens_audit_${result.analysis_id || 'result'}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `clonelens_audit_${result.analysis_id || 'result'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  // Simple human-readable explanation based on 3-tier thresholds
-  let simpleExplanation = "";
-  if (isAIGenerated) {
-    simpleExplanation = "Our system detected strong patterns commonly created by Artificial Intelligence (<50% authenticity). This content was likely generated or heavily synthesized by an AI tool.";
-  } else if (isModerate) {
-    simpleExplanation = "Our system detected moderate or mixed indicators (50%–70% authenticity). The content exhibits both human-like and synthetic traits, or may be lightly edited or compressed.";
-  } else {
-    simpleExplanation = "Our system confirmed natural human patterns (≥70% authenticity). The content exhibits characteristics consistent with genuine human authorship or authentic camera sensor captures.";
-  }
-
   return (
-    <div className="glass-panel results-display-card">
-      {/* Top Header */}
-      <div className="results-card-top-header flex items-center justify-between">
-        <div className="section-tag mb-0">
-          <ShieldCheck size={16} className="text-cyan-primary" />
-          <span>VERIFICATION RESULT</span>
+    <div className="glass-panel results-display-card animate-fade-in">
+      {/* ── Top Header ── */}
+      <div className="results-card-top-header">
+        <div className="section-tag" style={{ marginBottom: 0 }}>
+          <ShieldCheck size={15} style={{ color: 'var(--cyan-primary)' }} />
+          <span>Verification Result</span>
         </div>
-        <span className="text-xs font-mono text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700">
-          3-Tier Evaluation Active
+        <span
+          className="text-xs font-mono px-2.5 py-1 rounded-full"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}
+        >
+          3-Tier Evaluation
         </span>
       </div>
 
-      {/* 3-Tier Threshold Indicator Bar */}
-      <div className="threshold-tier-legend grid grid-cols-3 gap-2 my-4 p-2 rounded-xl bg-slate-900/60 border border-slate-700/60 text-xs">
-        <div className={`text-center py-2 px-1 rounded-lg transition-all ${isAIGenerated ? 'bg-rose-500/20 border border-rose-500/60 text-rose-300 font-bold shadow-sm ring-1 ring-rose-500/40' : 'text-slate-400 opacity-60'}`}>
-          <div className="font-semibold">&lt; 50%</div>
-          <div className="text-[11px] truncate">AI-Generated</div>
-        </div>
-        <div className={`text-center py-2 px-1 rounded-lg transition-all ${isModerate ? 'bg-amber-500/20 border border-amber-500/60 text-amber-300 font-bold shadow-sm ring-1 ring-amber-500/40' : 'text-slate-400 opacity-60'}`}>
-          <div className="font-semibold">50% - 70%</div>
-          <div className="text-[11px] truncate">Moderate</div>
-        </div>
-        <div className={`text-center py-2 px-1 rounded-lg transition-all ${isHumanGenerated ? 'bg-emerald-500/20 border border-emerald-500/60 text-emerald-300 font-bold shadow-sm ring-1 ring-emerald-500/40' : 'text-slate-400 opacity-60'}`}>
-          <div className="font-semibold">&ge; 70%</div>
-          <div className="text-[11px] truncate">Human-Generated</div>
-        </div>
+      {/* ── 3-Tier Threshold Bar ── */}
+      <div className="threshold-tier-legend mb-5">
+        {[
+          { label: 'AI-Generated',   range: '< 50%',    active: isAI,       type: 'ai' },
+          { label: 'Moderate',       range: '50 – 70%', active: isModerate, type: 'moderate' },
+          { label: 'Human-Generated',range: '≥ 70%',    active: isHuman,    type: 'human' },
+        ].map((t) => (
+          <div
+            key={t.label}
+            className="text-center py-2 px-1 rounded-lg transition-all text-xs"
+            style={{
+              background: t.active ? tierBg(t.type) : 'transparent',
+              border: `1px solid ${t.active ? tierBorder(t.type) : 'transparent'}`,
+              color: t.active ? tierColor(t.type) : 'var(--text-dim)',
+              fontWeight: t.active ? 700 : 400,
+              opacity: t.active ? 1 : 0.55,
+            }}
+          >
+            <div className="font-bold">{t.range}</div>
+            <div className="text-[11px] truncate">{t.label}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Main Verdict Banner */}
-      <div className={`verdict-banner-box ${isAIGenerated ? 'verdict-danger' : isModerate ? 'verdict-warning' : 'verdict-success'} mb-8`}>
+      {/* ── Verdict Banner ── */}
+      <div className={`verdict-banner-box ${isAI ? 'verdict-danger' : isModerate ? 'verdict-warning' : 'verdict-success'}`}>
         <div className="verdict-icon-wrap">
-          {isAIGenerated ? (
-            <ShieldAlert size={36} className="text-rose-bright" />
-          ) : isModerate ? (
-            <AlertTriangle size={36} className="text-amber-400" />
-          ) : (
-            <ShieldCheck size={36} className="text-emerald-bright" />
-          )}
+          {isAI
+            ? <ShieldAlert size={32} style={{ color: 'var(--rose-bright)' }} />
+            : isModerate
+              ? <AlertTriangle size={32} style={{ color: 'var(--amber-warning)' }} />
+              : <ShieldCheck size={32} style={{ color: 'var(--emerald-bright)' }} />
+          }
         </div>
-
         <div className="verdict-text-group">
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="verdict-headline text-2xl font-bold">
-              {isAIGenerated ? "AI-Generated" : isModerate ? "Moderate" : "Human-Generated"}
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h2 className="verdict-headline" style={{ color: tierColor(isAI ? 'ai' : isModerate ? 'moderate' : 'human') }}>
+              {verdictText}
             </h2>
-            <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider ${isAIGenerated ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : isModerate ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'}`}>
-              {overallRisk} Risk
+            <span
+              className="text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider"
+              style={{ background: tierBg(isAI ? 'ai' : isModerate ? 'moderate' : 'human'), color: tierColor(isAI ? 'ai' : isModerate ? 'moderate' : 'human'), border: `1px solid ${tierBorder(isAI ? 'ai' : isModerate ? 'moderate' : 'human')}` }}
+            >
+              {risk} Risk
             </span>
           </div>
-          <p className="verdict-subtext text-[1.05rem]">
-            {simpleExplanation}
-          </p>
+          <p className="verdict-subtext">{simpleExpl}</p>
         </div>
       </div>
 
-      {/* Modality Breakdown for Multimodal */}
-      {input_type === 'multimodal' && image_analysis && text_analysis && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          {/* Image Result */}
-          <div className={`p-5 rounded-xl border flex items-center gap-4 ${imgTier.type === 'ai' ? 'bg-rose-500/10 border-rose-500/30' : imgTier.type === 'human' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
-             <div className={`p-3 rounded-lg ${imgTier.type === 'ai' ? 'bg-rose-500/20' : imgTier.type === 'human' ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
-               <ImageIcon size={28} className={imgTier.type === 'ai' ? 'text-rose-400' : imgTier.type === 'human' ? 'text-emerald-400' : 'text-amber-400'} />
-             </div>
-             <div>
-                <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Image Result</div>
-                <div className={`text-xl font-bold ${imgTier.type === 'ai' ? 'text-rose-400' : imgTier.type === 'human' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                   {imgTier.label} ({((image_analysis.authenticity_probability || 0) * 100).toFixed(1)}%)
-                </div>
-                {image_analysis.confidence && (
-                  <div className="text-xs text-slate-400 mt-1">Confidence: {(image_analysis.confidence * 100).toFixed(1)}%</div>
-                )}
-             </div>
+      {/* ── Large Circular Score Ring ── */}
+      <ScoreRing score={score} colorClass={ringClass} label="Authenticity" />
+
+      {/* ── 3 Metric Cards ── */}
+      <div className="metric-cards-row">
+        {/* Card 1: Authenticity */}
+        <div className="metric-card">
+          <div className="metric-card-label">
+            <BarChart2 size={12} />
+            Authenticity
           </div>
-          {/* Text Result */}
-          <div className={`p-5 rounded-xl border flex items-center gap-4 ${txtTier.type === 'ai' ? 'bg-rose-500/10 border-rose-500/30' : txtTier.type === 'human' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
-             <div className={`p-3 rounded-lg ${txtTier.type === 'ai' ? 'bg-rose-500/20' : txtTier.type === 'human' ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
-               <FileText size={28} className={txtTier.type === 'ai' ? 'text-rose-400' : txtTier.type === 'human' ? 'text-emerald-400' : 'text-amber-400'} />
-             </div>
-             <div>
-                <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Text Result</div>
-                <div className={`text-xl font-bold ${txtTier.type === 'ai' ? 'text-rose-400' : txtTier.type === 'human' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                   {txtTier.label} ({((text_analysis.authenticity_probability || 0) * 100).toFixed(1)}%)
-                </div>
-                {text_analysis.confidence && (
-                  <div className="text-xs text-slate-400 mt-1">Confidence: {(text_analysis.confidence * 100).toFixed(1)}%</div>
-                )}
-             </div>
+          <div className="metric-card-value" style={{ color: tierColor(isAI ? 'ai' : isModerate ? 'moderate' : 'human') }}>
+            {score.toFixed(1)}%
+          </div>
+          <span
+            className="metric-card-tier"
+            style={{ background: tierBg(isAI ? 'ai' : isModerate ? 'moderate' : 'human'), color: tierColor(isAI ? 'ai' : isModerate ? 'moderate' : 'human') }}
+          >
+            {isAI ? '< 50%' : isModerate ? '50–70%' : '≥ 70%'}
+          </span>
+          <div className="metric-progress-track">
+            <div
+              className="metric-progress-bar"
+              style={{
+                width: `${Math.min(score, 100)}%`,
+                background: isAI ? 'linear-gradient(90deg,#dc2626,#f87171)' : isModerate ? 'linear-gradient(90deg,#d97706,#f59e0b)' : 'linear-gradient(90deg,#10b981,#34d399)',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Card 2: AI Likelihood */}
+        <div className="metric-card">
+          <div className="metric-card-label">
+            <Activity size={12} />
+            AI Likelihood
+          </div>
+          <div
+            className="metric-card-value"
+            style={{ color: aiProb > 50 ? 'var(--rose-bright)' : aiProb > 30 ? 'var(--amber-warning)' : 'var(--emerald-bright)' }}
+          >
+            {aiProb.toFixed(1)}%
+          </div>
+          <span
+            className="metric-card-tier"
+            style={{
+              background: aiProb > 50 ? 'var(--rose-bg)' : aiProb > 30 ? 'var(--amber-bg)' : 'var(--emerald-bg)',
+              color: aiProb > 50 ? 'var(--rose-bright)' : aiProb > 30 ? 'var(--amber-warning)' : 'var(--emerald-bright)',
+            }}
+          >
+            {aiProb > 50 ? 'High AI' : aiProb > 30 ? 'Moderate' : 'Low'}
+          </span>
+          <div className="metric-progress-track">
+            <div
+              className="metric-progress-bar"
+              style={{
+                width: `${Math.min(aiProb, 100)}%`,
+                background: aiProb > 50 ? 'linear-gradient(90deg,#dc2626,#f87171)' : aiProb > 30 ? 'linear-gradient(90deg,#d97706,#f59e0b)' : 'linear-gradient(90deg,#10b981,#34d399)',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Card 3: Confidence */}
+        <div className="metric-card">
+          <div className="metric-card-label">
+            <Eye size={12} />
+            Confidence
+          </div>
+          <div className="metric-card-value" style={{ color: 'var(--cyan-bright)' }}>
+            {confidence_percent ? `${confidence_percent.toFixed(0)}%` : '--'}
+          </div>
+          <span
+            className="metric-card-tier"
+            style={{ background: 'var(--cyan-bg)', color: 'var(--cyan-bright)' }}
+          >
+            {risk} Risk
+          </span>
+          <div className="metric-progress-track">
+            <div
+              className="metric-progress-bar bg-cyan-grad"
+              style={{ width: `${Math.min(confidence_percent || 0, 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Modality Breakdown (Multimodal only) ── */}
+      {input_type === 'multimodal' && image_analysis && text_analysis && (
+        <div className="modality-breakdown-grid mb-5">
+          {/* Image */}
+          <div
+            className="modality-card"
+            style={{ background: tierBg(imgTier.type), borderColor: tierBorder(imgTier.type) }}
+          >
+            <div className="modality-icon-wrap" style={{ background: `color-mix(in srgb, ${tierColor(imgTier.type)} 15%, transparent)`, border: `1px solid ${tierBorder(imgTier.type)}` }}>
+              <ImageIcon size={22} style={{ color: tierColor(imgTier.type) }} />
+            </div>
+            <div>
+              <div className="modality-label">Image Result</div>
+              <div className="modality-value" style={{ color: tierColor(imgTier.type) }}>
+                {imgTier.label} ({(imgScore * 100).toFixed(1)}%)
+              </div>
+              {image_analysis.confidence && (
+                <div className="modality-conf">Confidence: {(image_analysis.confidence * 100).toFixed(1)}%</div>
+              )}
+            </div>
+          </div>
+
+          {/* Text */}
+          <div
+            className="modality-card"
+            style={{ background: tierBg(txtTier.type), borderColor: tierBorder(txtTier.type) }}
+          >
+            <div className="modality-icon-wrap" style={{ background: `color-mix(in srgb, ${tierColor(txtTier.type)} 15%, transparent)`, border: `1px solid ${tierBorder(txtTier.type)}` }}>
+              <FileText size={22} style={{ color: tierColor(txtTier.type) }} />
+            </div>
+            <div>
+              <div className="modality-label">Text Result</div>
+              <div className="modality-value" style={{ color: tierColor(txtTier.type) }}>
+                {txtTier.label} ({(txtScore * 100).toFixed(1)}%)
+              </div>
+              {text_analysis.confidence && (
+                <div className="modality-conf">Confidence: {(text_analysis.confidence * 100).toFixed(1)}%</div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* 2 Simple Metric Score Progress Indicators */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Metric 1: Authenticity Score */}
-        <div className="metric-score-card bg-slate-800/40 p-5 rounded-xl border border-slate-700/50">
-          <div className="flex justify-between items-center">
-            <span className="metric-score-label text-slate-300 font-medium">Authenticity Score</span>
-            <span className={`text-xs px-2 py-0.5 rounded font-mono font-semibold ${isHumanGenerated ? 'bg-emerald-500/20 text-emerald-300' : isModerate ? 'bg-amber-500/20 text-amber-300' : 'bg-rose-500/20 text-rose-300'}`}>
-              {isHumanGenerated ? '≥70% Human' : isModerate ? '50-70% Moderate' : '<50% AI'}
-            </span>
-          </div>
-          <div className="metric-score-val-row mt-2 mb-3">
-            <span className={`text-3xl font-bold ${mediaAuthenticity >= 70 ? 'text-emerald-bright' : mediaAuthenticity >= 50 ? 'text-amber-400' : 'text-rose-bright'}`}>
-              {mediaAuthenticity.toFixed(1)}%
-            </span>
-          </div>
-          <div className="metric-progress-track h-2 bg-slate-700/50 rounded-full overflow-hidden">
-            <div 
-              className={`h-full ${mediaAuthenticity >= 70 ? 'bg-emerald-grad' : mediaAuthenticity >= 50 ? 'bg-amber-grad' : 'bg-rose-grad'}`}
-              style={{ width: `${Math.min(Math.max(mediaAuthenticity, 0), 100)}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Metric 2: AI Probability */}
-        <div className="metric-score-card bg-slate-800/40 p-5 rounded-xl border border-slate-700/50">
-          <div className="flex justify-between items-center">
-            <span className="metric-score-label text-slate-300 font-medium">Likelihood of being AI</span>
-            <span className={`text-xs px-2 py-0.5 rounded font-mono font-semibold ${aiProbability > 50 ? 'bg-rose-500/20 text-rose-300' : aiProbability > 30 ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
-              {aiProbability > 50 ? '>50% AI' : aiProbability > 30 ? 'Moderate' : 'Low'}
-            </span>
-          </div>
-          <div className="metric-score-val-row mt-2 mb-3">
-            <span className={`text-3xl font-bold ${aiProbability > 50 ? 'text-rose-bright' : aiProbability > 30 ? 'text-amber-400' : 'text-emerald-bright'}`}>
-              {aiProbability.toFixed(1)}%
-            </span>
-          </div>
-          <div className="metric-progress-track h-2 bg-slate-700/50 rounded-full overflow-hidden">
-            <div 
-              className={`h-full ${aiProbability > 50 ? 'bg-rose-grad' : aiProbability > 30 ? 'bg-amber-grad' : 'bg-emerald-grad'}`}
-              style={{ width: `${Math.min(Math.max(aiProbability, 0), 100)}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Advanced Toggle */}
-      <div className="flex items-center justify-center mb-6">
-        <button 
+      {/* ── Advanced Toggle ── */}
+      <div className="flex items-center justify-center my-5">
+        <button
+          type="button"
+          className="advanced-toggle-btn"
           onClick={() => setIsAdvancedMode(!isAdvancedMode)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/60 border border-slate-600/50 text-slate-300 transition-colors"
+          id="advanced-toggle"
         >
-          <Settings2 size={16} className="text-cyan-primary" />
-          <span className="font-medium text-sm">
-            {isAdvancedMode ? 'Hide Advanced Technical Details' : 'View Advanced Technical Details'}
-          </span>
-          {isAdvancedMode ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          <Settings2 size={15} style={{ color: 'var(--cyan-primary)' }} />
+          <span>{isAdvancedMode ? 'Hide Advanced Details' : 'View Advanced Details'}</span>
+          {isAdvancedMode ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
         </button>
       </div>
 
-      {/* ADVANCED MODE SECTION */}
+      {/* ── Advanced Mode Section ── */}
       {isAdvancedMode && (
-        <div className="advanced-mode-container bg-slate-900/50 p-6 rounded-2xl border border-cyan-primary/20 mb-6 shadow-inner animate-fade-in">
-          
-          {/* Split Details Row: Key Insights & Detection Details */}
-          <div className="insights-details-split-row mb-6">
-            {/* Left Column: Key Insights */}
-            <div className="insights-panel bg-slate-800/60 p-5 rounded-xl border border-slate-700/50">
-              <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">Forensic Insights</h3>
+        <div className="advanced-mode-container">
+          {/* Insights + System Details */}
+          <div className="insights-details-split-row">
+            {/* Forensic Insights */}
+            <div className="insights-panel">
+              <h3 className="text-xs font-bold tracking-wider uppercase mb-3" style={{ color: 'var(--text-muted)' }}>
+                Forensic Insights
+              </h3>
               <ul className="insights-checklist space-y-3 text-sm">
                 {image_analysis?.explanation && (
-                  <li className="flex items-start gap-3">
-                    <CheckCircle2 size={16} className={`${image_analysis.prediction.includes('AI') ? 'text-rose-bright' : 'text-emerald-bright'} flex-shrink-0 mt-0.5`} />
-                    <span className="text-slate-300"><strong className="text-cyan-primary font-semibold">Vision CNN:</strong> {image_analysis.explanation}</span>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 size={14} style={{ color: tierColor(imgTier.type), flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ color: 'var(--text-secondary)' }}>
+                      <strong style={{ color: 'var(--cyan-bright)' }}>Vision CNN: </strong>
+                      {image_analysis.explanation}
+                    </span>
                   </li>
                 )}
                 {text_analysis?.explanation && (
-                  <li className="flex items-start gap-3">
-                    <CheckCircle2 size={16} className={`${text_analysis.prediction.includes('AI') ? 'text-rose-bright' : 'text-emerald-bright'} flex-shrink-0 mt-0.5`} />
-                    <span className="text-slate-300"><strong className="text-purple-bright font-semibold">NLP Engine:</strong> {text_analysis.explanation}</span>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 size={14} style={{ color: tierColor(txtTier.type), flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ color: 'var(--text-secondary)' }}>
+                      <strong style={{ color: 'var(--purple-bright)' }}>NLP Engine: </strong>
+                      {text_analysis.explanation}
+                    </span>
                   </li>
                 )}
                 {!image_analysis && !text_analysis && (
-                  <li className="text-slate-500 italic">No modal-specific insights available.</li>
+                  <li style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No modal-specific insights available.</li>
                 )}
               </ul>
             </div>
 
-            {/* Right Column: Detection Details */}
-            <div className="detection-details-panel bg-slate-800/60 p-5 rounded-xl border border-slate-700/50">
-              <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">System Details</h3>
-              
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between border-b border-slate-700/50 pb-2">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Layers size={14} className="text-cyan-primary" />
-                    <span>Models Triggered:</span>
+            {/* System Details */}
+            <div className="detection-details-panel">
+              <h3 className="text-xs font-bold tracking-wider uppercase mb-3" style={{ color: 'var(--text-muted)' }}>
+                System Details
+              </h3>
+              <div className="space-y-2.5 text-sm">
+                {[
+                  {
+                    icon: <Layers size={13} style={{ color: 'var(--cyan-primary)' }} />,
+                    label: 'Models Used',
+                    val: [image_analysis && 'CNN', text_analysis && 'LLM'].filter(Boolean).join(' + ') || 'Fusion',
+                  },
+                  {
+                    icon: <Clock size={13} style={{ color: 'var(--cyan-primary)' }} />,
+                    label: 'Analysis Time',
+                    val: `${((image_analysis?.processing_time_ms || 0) + (text_analysis?.processing_time_ms || 0)).toFixed(0)} ms`,
+                  },
+                  {
+                    icon: <Cpu size={13} style={{ color: 'var(--cyan-primary)' }} />,
+                    label: 'Mode',
+                    val: input_type.charAt(0).toUpperCase() + input_type.slice(1),
+                  },
+                ].map((row) => (
+                  <div
+                    key={row.label}
+                    className="flex items-center justify-between py-2"
+                    style={{ borderBottom: '1px solid var(--border-subtle)' }}
+                  >
+                    <div className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+                      {row.icon}
+                      <span>{row.label}</span>
+                    </div>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.83rem' }}>{row.val}</span>
                   </div>
-                  <span className="text-slate-200 font-medium">
-                    {[image_analysis && "CNN", text_analysis && "LLM"].filter(Boolean).join(" + ") || "Fusion"}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between border-b border-slate-700/50 pb-2">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Clock size={14} className="text-cyan-primary" />
-                    <span>Analysis Time:</span>
-                  </div>
-                  <span className="text-slate-200 font-medium">
-                    {((image_analysis?.processing_time_ms || 0) + (text_analysis?.processing_time_ms || 0)).toFixed(0)} ms
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Cpu size={14} className="text-cyan-primary" />
-                    <span>Mode:</span>
-                  </div>
-                  <span className="text-slate-200 font-medium">
-                    {input_type.charAt(0).toUpperCase() + input_type.slice(1)}
-                  </span>
-                </div>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Forensic Explainability & Deep-Dive Tabs */}
-          <div className="forensic-tabs-wrapper border border-slate-700/50 rounded-xl overflow-hidden">
-            <div className="forensic-tab-nav bg-slate-800/80 border-b border-slate-700/50 flex">
-              <button
-                type="button"
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'overview' ? 'text-cyan-primary border-b-2 border-cyan-primary bg-slate-700/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/20'}`}
-                onClick={() => setActiveTab('overview')}
-              >
-                <Info size={14} />
-                <span>Raw Explanation</span>
-              </button>
-
-              {image_analysis && (
+          {/* ── Forensic Tabs ── */}
+          <div className="forensic-tabs-wrapper">
+            <div className="forensic-tab-nav" role="tablist">
+              {[
+                { id: 'overview',     icon: <Info size={13} />,     label: 'Explanation' },
+                image_analysis && { id: 'heatmap',    icon: <Eye size={13} />,      label: 'Grad-CAM' },
+                text_analysis  && { id: 'stylometrics',icon: <FileText size={13} />, label: 'Stylometrics' },
+                decision_fusion && { id: 'fusion',     icon: <Scale size={13} />,    label: 'Fusion Math' },
+              ].filter(Boolean).map((tab) => (
                 <button
+                  key={tab.id}
                   type="button"
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'heatmap' ? 'text-cyan-primary border-b-2 border-cyan-primary bg-slate-700/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/20'}`}
-                  onClick={() => setActiveTab('heatmap')}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  className={activeTab === tab.id ? 'tab-active' : ''}
+                  onClick={() => setActiveTab(tab.id)}
+                  id={`forensic-tab-${tab.id}`}
                 >
-                  <Eye size={14} />
-                  <span>Grad-CAM Heatmap</span>
+                  {tab.icon}
+                  <span>{tab.label}</span>
                 </button>
-              )}
-
-              {text_analysis && (
-                <button
-                  type="button"
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'stylometrics' ? 'text-cyan-primary border-b-2 border-cyan-primary bg-slate-700/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/20'}`}
-                  onClick={() => setActiveTab('stylometrics')}
-                >
-                  <FileText size={14} />
-                  <span>Stylometrics</span>
-                </button>
-              )}
-
-              {decision_fusion && (
-                <button
-                  type="button"
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'fusion' ? 'text-cyan-primary border-b-2 border-cyan-primary bg-slate-700/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/20'}`}
-                  onClick={() => setActiveTab('fusion')}
-                >
-                  <Scale size={14} />
-                  <span>Fusion Math</span>
-                </button>
-              )}
+              ))}
             </div>
 
-            <div className="forensic-tab-content bg-slate-800/40 p-5 min-h-[250px]">
+            <div className="forensic-tab-content">
+              {/* Raw Explanation */}
               {activeTab === 'overview' && (
-                <div className="tab-pane-content text-slate-300 text-sm leading-relaxed">
-                  <p>{explanation}</p>
-                </div>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.75 }}>
+                  {explanation || 'No backend explanation provided for this analysis.'}
+                </p>
               )}
 
+              {/* Grad-CAM Heatmap */}
               {activeTab === 'heatmap' && image_analysis && (
-                <div className="tab-pane-content flex flex-col gap-6">
+                <div className="flex flex-col gap-5">
                   {image_analysis.gradcam_heatmap ? (
-                    <div className="heatmap-display-container relative max-w-sm rounded-lg overflow-hidden border border-slate-600/50 mx-auto shadow-lg">
-                      <div className="absolute top-2 left-2 bg-slate-900/80 backdrop-blur text-xs font-semibold px-2 py-1 rounded text-cyan-primary flex items-center gap-1.5 border border-cyan-primary/30 z-10">
-                        <Activity size={12} /> <span>CNN Activation</span>
+                    <div className="heatmap-display-container">
+                      <div className="heatmap-badge">
+                        <Activity size={11} />
+                        CNN Activation
                       </div>
-                      <img 
-                        src={image_analysis.gradcam_heatmap} 
-                        alt="Grad-CAM Activation Heatmap" 
-                        className="w-full h-auto block" 
+                      <img
+                        src={image_analysis.gradcam_heatmap}
+                        alt="Grad-CAM Activation Heatmap"
+                        className="w-full h-auto block"
                       />
                     </div>
                   ) : (
-                    <div className="text-center py-10 text-slate-500 italic border border-dashed border-slate-600/50 rounded-lg">
-                      No Grad-CAM Heatmap generated for this sample.
+                    <div
+                      className="text-center py-10"
+                      style={{ color: 'var(--text-muted)', fontStyle: 'italic', border: '1px dashed var(--border-subtle)', borderRadius: 'var(--radius-md)' }}
+                    >
+                      No Grad-CAM heatmap generated for this sample.
                     </div>
                   )}
-                  
+
                   {image_analysis.forensic_indicators && (
-                    <div className="forensic-indicators-box bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
-                      <h4 className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-3">Visual Forensic Indicators</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        {Object.entries(image_analysis.forensic_indicators).map(([key, val]) => (
-                          <div className="flex justify-between items-center bg-slate-800 p-2.5 rounded border border-slate-700" key={key}>
-                            <span className="text-xs text-slate-300 capitalize">{key.replace(/_/g, ' ')}</span>
-                            <span className="text-xs font-mono text-cyan-400">{typeof val === 'boolean' ? (val ? 'True' : 'False') : typeof val === 'number' ? val.toFixed(2) : val}</span>
+                    <div>
+                      <h4 className="text-xs font-bold tracking-wider uppercase mb-3" style={{ color: 'var(--text-muted)' }}>
+                        Visual Forensic Indicators
+                      </h4>
+                      <div className="stylometrics-grid">
+                        {Object.entries(image_analysis.forensic_indicators).map(([k, v]) => (
+                          <div key={k} className="stylometric-item">
+                            <span className="stylometric-key">{k.replace(/_/g, ' ')}</span>
+                            <span className="stylometric-val" style={{ color: 'var(--cyan-bright)' }}>
+                              {typeof v === 'boolean' ? (v ? 'True' : 'False') : typeof v === 'number' ? v.toFixed(3) : v}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -411,26 +602,33 @@ export default function ResultsDisplay({ result, onReset }) {
                 </div>
               )}
 
+              {/* Stylometrics */}
               {activeTab === 'stylometrics' && text_analysis && (
-                <div className="tab-pane-content flex flex-col gap-5">
+                <div className="flex flex-col gap-4">
                   {text_analysis.linguistic_features && (
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(text_analysis.linguistic_features).map(([key, val]) => (
-                        <div className="flex justify-between items-center bg-slate-800 p-2.5 rounded border border-slate-700" key={key}>
-                          <span className="text-xs text-slate-300 capitalize">{key.replace(/_/g, ' ')}</span>
-                          <span className="text-xs font-mono text-purple-400">{typeof val === 'number' ? val.toFixed(2) : val}</span>
-                        </div>
-                      ))}
-                    </div>
+                    <>
+                      <h4 className="text-xs font-bold tracking-wider uppercase mb-1" style={{ color: 'var(--text-muted)' }}>
+                        Linguistic Features
+                      </h4>
+                      <div className="stylometrics-grid">
+                        {Object.entries(text_analysis.linguistic_features).map(([k, v]) => (
+                          <div key={k} className="stylometric-item">
+                            <span className="stylometric-key">{k.replace(/_/g, ' ')}</span>
+                            <span className="stylometric-val">
+                              {typeof v === 'number' ? v.toFixed(3) : v}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
                   )}
+
                   {text_analysis.forensic_details?.synthetic_markers?.length > 0 && (
-                    <div className="bg-slate-900/50 p-4 rounded-xl border border-rose-900/30">
-                      <span className="text-xs font-bold tracking-wider text-rose-400 uppercase mb-3 block">Detected AI Transitional Markers</span>
-                      <div className="flex flex-wrap gap-2">
-                        {text_analysis.forensic_details.synthetic_markers.map((marker, i) => (
-                          <span key={i} className="bg-rose-500/10 text-rose-300 border border-rose-500/20 text-xs px-2.5 py-1 rounded">
-                            "{marker}"
-                          </span>
+                    <div className="synthetic-markers-box">
+                      <span className="synthetic-markers-label">Detected AI Transitional Markers</span>
+                      <div className="synthetic-markers-tags">
+                        {text_analysis.forensic_details.synthetic_markers.map((m, i) => (
+                          <span key={i} className="synthetic-marker-tag">"{m}"</span>
                         ))}
                       </div>
                     </div>
@@ -438,16 +636,62 @@ export default function ResultsDisplay({ result, onReset }) {
                 </div>
               )}
 
+              {/* Decision Fusion */}
               {activeTab === 'fusion' && decision_fusion && (
-                <div className="tab-pane-content flex justify-center items-center py-6">
-                  <div className="bg-slate-900/80 p-6 rounded-xl border border-slate-700/50 text-center max-w-md">
-                    <code className="text-emerald-400 text-lg block mb-4">F = w_img &times; S_img + w_txt &times; S_txt</code>
-                    <div className="text-sm text-slate-300 mb-3 font-mono">
-                      Calculated:<br/>
-                      ({decision_fusion.image_weight} &times; {decision_fusion.image_score?.toFixed(3) || 0}) + ({decision_fusion.text_weight} &times; {decision_fusion.text_score?.toFixed(3) || 0}) = <span className="font-bold text-white">{decision_fusion.fusion_score.toFixed(3)}</span>
+                <div className="fusion-viz-container">
+                  <div className="fusion-formula-box">
+                    <code className="fusion-formula-code">
+                      F = w<sub>img</sub> × S<sub>img</sub> + w<sub>txt</sub> × S<sub>txt</sub>
+                    </code>
+                    <div className="fusion-formula-calc">
+                      ({decision_fusion.image_weight} × {(decision_fusion.image_score || 0).toFixed(3)}) +
+                      ({decision_fusion.text_weight} × {(decision_fusion.text_score || 0).toFixed(3)}) =
+                      <strong style={{ color: 'var(--text-primary)' }}> {decision_fusion.fusion_score?.toFixed(4)}</strong>
                     </div>
-                    <div className="text-xs text-cyan-primary/70 mt-4 pt-4 border-t border-slate-700/50">
-                      Method: {decision_fusion.fusion_method}
+                    <span className="fusion-method-tag">Method: {decision_fusion.fusion_method}</span>
+                  </div>
+
+                  <div className="fusion-weight-bars">
+                    <div className="fusion-weight-row">
+                      <span className="fusion-weight-label">Image</span>
+                      <div className="fusion-weight-track">
+                        <div
+                          className="fusion-weight-fill bg-cyan-grad"
+                          style={{ width: `${(decision_fusion.image_weight || 0) * 100}%` }}
+                        />
+                      </div>
+                      <span className="fusion-weight-pct">{((decision_fusion.image_weight || 0) * 100).toFixed(0)}%</span>
+                    </div>
+                    <div className="fusion-weight-row">
+                      <span className="fusion-weight-label">Text</span>
+                      <div className="fusion-weight-track">
+                        <div
+                          className="fusion-weight-fill bg-purple-grad"
+                          style={{ width: `${(decision_fusion.text_weight || 0) * 100}%` }}
+                        />
+                      </div>
+                      <span className="fusion-weight-pct">{((decision_fusion.text_weight || 0) * 100).toFixed(0)}%</span>
+                    </div>
+                    {/* Score bars */}
+                    <div className="fusion-weight-row">
+                      <span className="fusion-weight-label">Img Score</span>
+                      <div className="fusion-weight-track">
+                        <div
+                          className="fusion-weight-fill"
+                          style={{ width: `${(decision_fusion.image_score || 0) * 100}%`, background: tierColor(getTier(decision_fusion.image_score || 0).type) }}
+                        />
+                      </div>
+                      <span className="fusion-weight-pct">{((decision_fusion.image_score || 0) * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="fusion-weight-row">
+                      <span className="fusion-weight-label">Txt Score</span>
+                      <div className="fusion-weight-track">
+                        <div
+                          className="fusion-weight-fill"
+                          style={{ width: `${(decision_fusion.text_score || 0) * 100}%`, background: tierColor(getTier(decision_fusion.text_score || 0).type) }}
+                        />
+                      </div>
+                      <span className="fusion-weight-pct">{((decision_fusion.text_score || 0) * 100).toFixed(1)}%</span>
                     </div>
                   </div>
                 </div>
@@ -457,27 +701,26 @@ export default function ResultsDisplay({ result, onReset }) {
         </div>
       )}
 
-      {/* Action Footer: Share / (Export hidden in simple mode) */}
-      <div className="results-action-footer flex gap-3 mt-4 pt-4 border-t border-slate-700/30">
-        <button 
-          type="button" 
-          className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-lg font-medium transition-colors"
+      {/* ── Action Footer ── */}
+      <div className="results-action-footer">
+        <button
+          type="button"
+          className="btn-action btn-action-primary"
           onClick={handleCopyReport}
+          id="copy-report-btn"
         >
-          <Share2 size={16} />
-          <span>{copied ? 'Copied to Clipboard!' : 'Share Simple Report'}</span>
+          <Share2 size={15} />
+          <span>{copied ? '✓ Copied!' : 'Copy Report'}</span>
         </button>
-
-        {isAdvancedMode && (
-          <button 
-            type="button" 
-            className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 py-2.5 rounded-lg font-medium transition-colors"
-            onClick={handleDownloadJSON}
-          >
-            <Download size={16} />
-            <span>Export JSON Audit Data</span>
-          </button>
-        )}
+        <button
+          type="button"
+          className="btn-action btn-action-secondary"
+          onClick={handleDownloadJSON}
+          id="download-json-btn"
+        >
+          <Download size={15} />
+          <span>Export JSON</span>
+        </button>
       </div>
     </div>
   );

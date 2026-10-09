@@ -11,7 +11,7 @@ export default function ModelInfoCard({ health }) {
           <BookOpen size={20} className="text-cyan-primary" />
           <h3 className="font-heading font-semibold text-lg">System Architecture & Research Framework</h3>
         </div>
-        <span className="badge badge-cyan">B.Tech Final Year Capstone</span>
+        <span className="badge badge-cyan">Multimodal Forensic Architecture</span>
       </div>
 
       <div className="architecture-grid">

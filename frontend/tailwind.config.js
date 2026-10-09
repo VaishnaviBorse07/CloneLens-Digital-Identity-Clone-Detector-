@@ -6,45 +6,46 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        heading: ['Manrope', 'Space Grotesk', 'sans-serif'],
+        sans:    ['Inter', 'sans-serif'],
+        mono:    ['JetBrains Mono', 'monospace'],
+      },
       colors: {
-        'cyan-primary': '#3aa0c9',
-        'cyan-bright': '#5ec2e8',
-        'purple-primary': '#8b6fd1',
-        'purple-bright': '#a892e0',
-        'indigo-primary': '#8b6fd1',
+        // Legacy aliases (kept for backward compat)
+        'cyan-primary':   '#06b6d4',
+        'cyan-bright':    '#22d3ee',
+        'purple-primary': '#8b5cf6',
+        'purple-bright':  '#a78bfa',
+        'indigo-primary': '#6366f1',
         'emerald-bright': '#34d399',
-        'rose-bright': '#e6746f',
+        'rose-bright':    '#f87171',
+        // Standard Tailwind shades updated to match design
         cyan: {
-          50: '#f3f9fc', 100: '#e2f2f8', 200: '#c1e3f0', 300: '#94cee6', 400: '#5ab4d8',
-          500: '#34a3cf', 600: '#267da0', 700: '#1c5d77', 800: '#123d4e', 900: '#0a232d',
-        },
-        blue: {
-          50: '#f3f9fc', 100: '#e2f2f8', 200: '#c1e3f0', 300: '#94cee6', 400: '#5ab4d8',
-          500: '#34a3cf', 600: '#267da0', 700: '#1c5d77', 800: '#123d4e', 900: '#0a232d',
+          50: '#ecfeff', 100: '#cffafe', 200: '#a5f3fc', 300: '#67e8f9',
+          400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490',
+          800: '#155e75', 900: '#164e63',
         },
         purple: {
-          50: '#f5f3fc', 100: '#e9e3f7', 200: '#cfc3ee', 300: '#ad97e2', 400: '#9d84da',
-          500: '#896ad6', 600: '#633ac8', 700: '#4f2da3', 800: '#3b227b', 900: '#2c195b',
+          50: '#faf5ff', 100: '#f3e8ff', 200: '#e9d5ff', 300: '#d8b4fe',
+          400: '#c084fc', 500: '#a855f7', 600: '#9333ea', 700: '#7c3aed',
+          800: '#6d28d9', 900: '#4c1d95',
         },
-        indigo: {
-          50: '#f5f3fc', 100: '#e9e3f7', 200: '#cfc3ee', 300: '#ad97e2', 400: '#9d84da',
-          500: '#896ad6', 600: '#633ac8', 700: '#4f2da3', 800: '#3b227b', 900: '#2c195b',
+        violet: {
+          400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
         },
         rose: {
-          50: '#fdf2f2', 100: '#fbe1e0', 200: '#f6bebc', 300: '#ef8f8a', 400: '#e6746f',
-          500: '#e6504a', 600: '#d6251d', 700: '#a91d17', 800: '#7c1511', 900: '#580f0c',
+          50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 300: '#fda4af',
+          400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c',
         },
         emerald: {
-          50: '#f2fdf8', 100: '#e0faf0', 200: '#bdf5de', 300: '#8cedc6', 400: '#4fd99e',
-          500: '#1dba7a', 600: '#148557', 700: '#0e593a', 800: '#0a3e29', 900: '#06281a',
+          400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857',
         },
         amber: {
-          50: '#fdf9f2', 100: '#faf1e0', 200: '#f4e1bd', 300: '#edcb8d', 400: '#e3ae4f',
-          500: '#dc9c27', 600: '#aa781b', 700: '#7e5914', 800: '#533a0d', 900: '#2f2108',
+          400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309',
         },
         slate: {
-          50: '#f6f7f8', 100: '#ebecef', 200: '#d4d6dd', 300: '#b5b8c4', 400: '#8d92a5',
-          500: '#868b9e', 600: '#666c81', 700: '#41434f', 800: '#22242c', 900: '#14161c',
+          700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#070810',
         },
       },
     },
