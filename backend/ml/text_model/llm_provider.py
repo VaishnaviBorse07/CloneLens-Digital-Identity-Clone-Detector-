@@ -1,6 +1,6 @@
 """Google Gemini LLM & NLP Forensics Provider Layer for CloneLens
 
-Specialized for Google Gemini (Gemini 1.5 Flash, 2.0 Flash, 1.5 Pro)
+Specialized for Google Gemini (Gemini 1.5 Flash)
 with Deterministic Stylometric Offline Fallback.
 """
 import os
@@ -81,15 +81,22 @@ class MockLLMProvider(BaseLLMProvider):
 
 class GeminiLLMProvider(BaseLLMProvider):
     """
-    Google Gemini Forensics Provider (Gemini 1.5 Flash, 2.0 Flash, 1.5 Pro).
+    Google Gemini Forensics Provider (Gemini 2.5 Flash, 2.5 Pro, 2.0 Flash).
     Uses direct Google REST API with structured JSON output and stylometric prompt grounding.
     """
 
-    def __init__(self, api_key: str, model_name: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
         self.api_key = (api_key or "").strip()
-        # Clean model name if passed with 'models/' prefix
-        clean_model = (model_name or "gemini-1.5-flash").replace("models/", "").strip()
-        self.model_name = clean_model or "gemini-1.5-flash"
+        # Clean model name if passed with 'models/' prefix or alias
+        raw_model = (model_name or "gemini-2.5-flash").replace("models/", "").strip()
+        norm = raw_model.lower()
+        if norm in ["gemini-2.5", "gemini2.5", "2.5", "gemini 2.5"]:
+            clean_model = "gemini-2.5-flash"
+        elif norm in ["gemini-1.5", "gemini1.5", "1.5", "gemini 1.5", "gemini-1.5-flash"]:
+            clean_model = "gemini-2.5-flash"
+        else:
+            clean_model = raw_model
+        self.model_name = clean_model or "gemini-2.5-flash"
 
     def analyze(self, text: str, linguistic_features: Dict[str, Any]) -> Tuple[float, float, str, Dict[str, Any]]:
         # Graceful fallback if API key is not configured
@@ -134,17 +141,22 @@ class GeminiLLMProvider(BaseLLMProvider):
             }
         }
 
-        # Try candidate models with graceful failover
-        candidate_models = [self.model_name]
-        if self.model_name != "gemini-1.5-flash":
-            candidate_models.append("gemini-1.5-flash")
-        if self.model_name != "gemini-2.0-flash":
-            candidate_models.append("gemini-2.0-flash")
+        # Try candidate models with graceful failover cascade
+        # Priority: requested model -> gemini-2.5-flash -> gemini-3.8-flash (active Google replacement)
+        candidate_pool = [
+            self.model_name,
+            "gemini-2.5-flash",
+            "gemini-3.8-flash",
+        ]
+        candidate_models = []
+        for m in candidate_pool:
+            if m and m not in candidate_models:
+                candidate_models.append(m)
 
         for m_name in candidate_models:
             endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={self.api_key}"
             try:
-                with httpx.Client(timeout=20.0) as client:
+                with httpx.Client(timeout=7.0) as client:
                     res = client.post(endpoint, json=payload, headers={"Content-Type": "application/json"})
                     if res.status_code == 200:
                         data = res.json()
@@ -163,12 +175,20 @@ class GeminiLLMProvider(BaseLLMProvider):
 
                         forensic_details = {
                             "engine": f"Google Gemini ({m_name})",
+                            "model_name": m_name,
                             "synthetic_markers": markers,
+                            "evaluated_markers": linguistic_features.get("ai_phrases_detected", []),
+                            "burstiness_index": round(linguistic_features.get("sentence_length_std", 0.0), 3),
+                            "lexical_richness_ttr": round(linguistic_features.get("type_token_ratio", 0.0), 3),
+                            "shannon_entropy": round(linguistic_features.get("shannon_entropy", 0.0), 3),
                             "provider_status": "Online / API Verified",
                         }
                         return auth_p, ai_p, exp, forensic_details
+                    else:
+                        print(f"[*] Gemini API model {m_name} returned status {res.status_code}. Trying next candidate...")
             except Exception as e:
-                pass
+                print(f"[!] Gemini API candidate {m_name} failed: {e}. Trying next candidate...")
+                continue
 
         # Fallback if network or key issue
         mock = MockLLMProvider()
@@ -192,7 +212,7 @@ def get_llm_provider(
     if name in ["gemini", "google", "default"]:
         return GeminiLLMProvider(
             api_key=api_key or os.getenv("GEMINI_API_KEY", os.getenv("LLM_API_KEY", "")),
-            model_name=model_name or os.getenv("LLM_MODEL_NAME", "gemini-1.5-flash")
+            model_name=model_name or os.getenv("LLM_MODEL_NAME", "gemini-2.5-flash")
         )
     else:
         return MockLLMProvider()
