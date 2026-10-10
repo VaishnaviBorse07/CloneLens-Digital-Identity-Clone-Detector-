@@ -63,10 +63,17 @@ class DecisionFusionEngine:
             final_auth_score = img_auth_score
             confidence = image_result["confidence"]
             fusion_method = "Unimodal (Image Analysis Only)"
+            agreement_label = "Unimodal"
+            agreement_str = "Only vision modality provided; assessment derived 100% from Customized CNN."
+            formula_breakdown = f"(1.0 × {round(img_auth_score, 3)}) = {round(final_auth_score, 4)}"
             explanation = (
                 f"Image analysis indicates a {round(img_auth_score * 100, 1)}% probability of human authenticity. "
                 f"{image_result['explanation']}"
             )
+            key_insights = image_result.get("key_insights", [
+                "Facial artifact analysis executed via Custom PyTorch CNN.",
+                f"Vision authenticity probability computed at {round(img_auth_score * 100, 1)}%."
+            ])
 
         elif text_result and not image_result:
             input_type = "text"
@@ -77,10 +84,17 @@ class DecisionFusionEngine:
             final_auth_score = txt_auth_score
             confidence = text_result["confidence"]
             fusion_method = "Unimodal (Text Analysis Only)"
+            agreement_label = "Unimodal"
+            agreement_str = "Only text modality provided; assessment derived 100% from NLP & Gemini forensics."
+            formula_breakdown = f"(1.0 × {round(txt_auth_score, 3)}) = {round(final_auth_score, 4)}"
             explanation = (
                 f"Text analysis indicates a {round(txt_auth_score * 100, 1)}% probability of human authorship. "
                 f"{text_result['explanation']}"
             )
+            key_insights = text_result.get("key_insights", [
+                "Linguistic and stylometric analysis processed with Google Gemini.",
+                f"Language authenticity probability computed at {round(txt_auth_score * 100, 1)}%."
+            ])
 
         else:
             # Multimodal Fusion
@@ -93,6 +107,7 @@ class DecisionFusionEngine:
             txt_auth_score = text_result["authenticity_probability"]
             
             final_auth_score = (eff_img_weight * img_auth_score) + (eff_txt_weight * txt_auth_score)
+            formula_breakdown = f"({eff_img_weight} × {round(img_auth_score, 3)}) + ({eff_txt_weight} × {round(txt_auth_score, 3)}) = {round(final_auth_score, 4)}"
             
             # Confidence aggregation: weighted average plus agreement bonus/penalty
             img_conf = image_result["confidence"]
@@ -104,9 +119,11 @@ class DecisionFusionEngine:
             txt_tier = self._classify_verdict(txt_auth_score)
             if img_tier == txt_tier:
                 confidence = min(base_conf * 1.05, 0.99)
+                agreement_label = "Corroborated"
                 agreement_str = f"Both image and text analyses consistently corroborate the assessment ({img_tier})."
             else:
                 confidence = max(base_conf * 0.88, 0.45)
+                agreement_label = "Divergent"
                 agreement_str = f"Image ({img_tier}) and text ({txt_tier}) show differing indicators; cross-modal variance has been factored in."
 
             fusion_method = f"Multimodal Weighted Fusion (Image: {int(eff_img_weight*100)}%, Text: {int(eff_txt_weight*100)}%)"
@@ -114,25 +131,38 @@ class DecisionFusionEngine:
                 f"Combined multimodal fusion computed an authenticity score of {round(final_auth_score * 100, 1)}%. "
                 f"{agreement_str}"
             )
+            key_insights = [
+                f"Multimodal consensus: {agreement_str}",
+                f"Vision CNN contributed {int(eff_img_weight * 100)}% ({round(img_auth_score * 100, 1)}% auth).",
+                f"Gemini NLP contributed {int(eff_txt_weight * 100)}% ({round(txt_auth_score * 100, 1)}% auth)."
+            ]
 
         # Classify final verdict based on 3-tier thresholds
         final_prediction = self._classify_verdict(final_auth_score)
+        overall_risk = "High" if final_auth_score < 0.50 else "Moderate" if final_auth_score < 0.70 else "Low"
 
         return {
             "input_type": input_type,
             "final_prediction": final_prediction,
             "authenticity_score_percent": round(final_auth_score * 100.0, 2),
             "confidence_percent": round(confidence * 100.0, 2),
+            "overall_risk": overall_risk,
             "fusion_score": round(final_auth_score, 4),
             "decision_fusion": {
                 "image_weight": eff_img_weight,
                 "text_weight": eff_txt_weight,
                 "image_score": img_auth_score,
                 "text_score": txt_auth_score,
+                "image_prediction": image_result.get("prediction") if image_result else None,
+                "text_prediction": text_result.get("prediction") if text_result else None,
+                "cross_modal_agreement": agreement_label,
+                "agreement_details": agreement_str,
+                "formula_breakdown": formula_breakdown,
                 "fusion_method": fusion_method,
                 "fusion_score": round(final_auth_score, 4),
             },
             "explanation": explanation,
+            "key_insights": key_insights,
         }
 
 

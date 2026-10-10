@@ -93,19 +93,38 @@ class TextInferenceEngine:
             prediction = "Moderate / Borderline"
             confidence = max(auth_prob, ai_prob)
 
+        # Generate key insights
+        insights = []
+        markers = forensic_details.get("synthetic_markers", []) or features.get("ai_phrases_detected", [])
+        if markers:
+            insights.append(f"Identified synthetic transition markers: {', '.join(str(m) for m in markers[:3])}")
+        if features.get("sentence_length_std", 0) < 2.0 and features.get("sentence_count", 0) > 1:
+            insights.append("Low sentence length burstiness indicates uniform machine cadence.")
+        elif features.get("sentence_length_std", 0) >= 3.0:
+            insights.append("Natural rhythmic clause and sentence length variation.")
+        if features.get("shannon_entropy", 0) > 4.0:
+            insights.append("High lexical entropy consistent with organic human vocabulary.")
+        if auth_prob >= 0.70:
+            insights.append("Linguistic syntax aligns with authentic human prose.")
+        elif auth_prob < 0.50:
+            insights.append("Elevated likelihood of LLM synthetic generation or templated drafting.")
+
         elapsed_ms = (time.time() - start_time) * 1000.0
+
+        engine_title = forensic_details.get("engine") or f"CloneLens NLP Suite + {active_provider_name.upper()}"
 
         return {
             "prediction": prediction,
             "authenticity_probability": round(auth_prob, 4),
             "ai_generated_probability": round(ai_prob, 4),
             "confidence": round(confidence, 4),
-            "model_name": f"CloneLens NLP Suite + {active_provider_name.upper()} Provider",
+            "model_name": engine_title,
             "provider": active_provider_name,
             "processing_time_ms": round(elapsed_ms, 2),
             "linguistic_features": features,
             "forensic_details": forensic_details,
             "explanation": f"Text analysis indicates {prediction.lower()} characteristics. {reason}",
+            "key_insights": insights,
         }
 
 

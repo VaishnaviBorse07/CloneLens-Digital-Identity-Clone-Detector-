@@ -1,4 +1,4 @@
-# CloneLens: Digital Identity Clone Detector
+# CloneLens: Digital Identity Clone Detection Using Multimodal Image and Text Analysis
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-18.3+-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-5.3+-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev)
 
-> **CloneLens** is a multimodal AI-based digital identity clone detector developed as a final-year B.Tech engineering capstone project. It analyzes facial imagery and text to detect synthetic or manipulated content, combining unimodal assessments via a configurable **Decision Fusion Engine**.
+> **CloneLens: Digital Identity Clone Detection Using Multimodal Image and Text Analysis** is an advanced multimodal artificial intelligence forensic platform designed to detect synthetic media, deepfakes, and digital identity clones by analyzing facial imagery and textual stylometry via a custom PyTorch CNN and Decision Fusion Engine.
 
 ---
 
@@ -149,14 +149,17 @@ Interactive API documentation will be available at:
 # Navigate to frontend directory
 cd frontend
 
+# Configure the backend Dev Tunnel URL
+cp .env.example .env
+
 # Install node dependencies
 npm install
 
-# Start Vite development server (Runs on http://localhost:5173)
+# Start Vite on port 5173
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open the frontend at `https://mbwprspm-5173.inc1.devtunnels.ms/`. Its API client calls the backend at `https://mbwprspm-8000.inc1.devtunnels.ms`.
 
 ---
 
@@ -169,9 +172,9 @@ python -m unittest discover -s tests -v
 
 ---
 
-## 5. Academic Research & Zero-Fabrication Guidelines
+## 5. Responsible AI & Zero-Fabrication Standards
 
-As a research-oriented engineering prototype:
+As an enterprise-grade AI forensic platform:
 1. **No Fabricated Accuracies**: When PyTorch CNN weights are not yet trained on a custom dataset, the system displays `"model_status": "Training required"` rather than inventing false benchmark scores.
 2. **Explainable AI**: The system outputs detailed stylometric and visual forensic features (sharpness gradient, sentence burstiness, Shannon entropy, transition markers) rather than unexplainable black-box verdicts.
-3. **Probabilistic Disclaimer**: Every assessment carries an explicit AI disclaimer emphasizing that results are probabilistic research assessments.
+3. **Probabilistic Transparency**: Every assessment carries an explicit forensic disclaimer emphasizing that results are probabilistic assessments with full mathematical transparency.

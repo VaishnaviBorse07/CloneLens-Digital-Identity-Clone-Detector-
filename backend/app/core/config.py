@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000
     ALLOWED_ORIGINS: Union[str, List[str]] = [
+        "https://mbwprspm-5173.inc1.devtunnels.ms",
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
@@ -38,7 +39,7 @@ class Settings(BaseSettings):
     # LLM / Text Model & Multi-Provider Settings
     LLM_PROVIDER: str = "mock"  # Options: mock, gemini, openai, groq, huggingface, ollama
     LLM_API_KEY: str = ""
-    LLM_MODEL_NAME: str = "gemini-1.5-flash"
+    LLM_MODEL_NAME: str = "gemini-2.5-flash"
     LLM_BASE_URL: Optional[str] = None
     LLM_FALLBACK_TO_MOCK: bool = True
     

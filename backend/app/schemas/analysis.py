@@ -42,6 +42,7 @@ class ImageAnalysisResult(BaseModel):
     image_metadata: Optional[Dict[str, Any]] = None
     forensic_indicators: Optional[Dict[str, Any]] = None
     explanation: str
+    key_insights: Optional[List[str]] = None
 
 
 # -----------------------------------------------------------------------------
@@ -50,7 +51,7 @@ class ImageAnalysisResult(BaseModel):
 class TextAnalysisRequest(BaseModel):
     text: str = Field(..., min_length=5, max_length=15000, description="Text snippet to analyze")
     provider: Optional[str] = Field(None, description="Optional provider override: 'gemini', 'openai', 'groq', 'huggingface', 'ollama', 'mock'")
-    model_name: Optional[str] = Field(None, description="Optional model override (e.g. 'gemini-1.5-flash', 'gpt-4o-mini')")
+    model_name: Optional[str] = Field(None, description="Optional model override (e.g. 'gemini-2.5-flash', 'gpt-4o-mini')")
 
 
 class TextAnalysisResult(BaseModel):
@@ -64,6 +65,7 @@ class TextAnalysisResult(BaseModel):
     linguistic_features: Optional[Dict[str, Any]] = None
     forensic_details: Optional[Dict[str, Any]] = None
     explanation: str
+    key_insights: Optional[List[str]] = None
 
 
 # -----------------------------------------------------------------------------
@@ -74,6 +76,11 @@ class FusionDetails(BaseModel):
     text_weight: float
     image_score: Optional[float] = None
     text_score: Optional[float] = None
+    image_prediction: Optional[str] = None
+    text_prediction: Optional[str] = None
+    cross_modal_agreement: Optional[str] = None
+    agreement_details: Optional[str] = None
+    formula_breakdown: Optional[str] = None
     fusion_method: str = "Weighted Linear Interpolation & Confidence Calibration"
     fusion_score: float = Field(..., ge=0.0, le=1.0)
 
@@ -82,13 +89,15 @@ class MultimodalAnalysisResult(BaseModel):
     analysis_id: str
     timestamp: str
     input_type: str  # "image", "text", "multimodal"
-    final_prediction: str  # "Authentic", "Potential Clone/Fake", "AI-Generated Content"
+    final_prediction: str  # "Human-Generated", "Moderate", "AI-Generated"
     authenticity_score_percent: float = Field(..., ge=0.0, le=100.0)
     confidence_percent: float = Field(..., ge=0.0, le=100.0)
+    overall_risk: Optional[str] = "Moderate"
     image_analysis: Optional[ImageAnalysisResult] = None
     text_analysis: Optional[TextAnalysisResult] = None
     decision_fusion: FusionDetails
     explanation: str
+    key_insights: Optional[List[str]] = None
     disclaimer: str = (
         "This result is an AI-based probabilistic assessment generated for research and prototyping purposes. "
         "It should not be treated as absolute verification."
