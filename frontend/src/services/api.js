@@ -3,11 +3,20 @@
  */
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('devtunnels.ms')
+      ? import.meta.env.VITE_API_URL
+      : 'http://localhost:8000';
+  }
+  return import.meta.env.VITE_API_URL || 'http://localhost:8000';
+};
+
+const API_BASE = getBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_BASE,
-  timeout: 30000,
+  timeout: 20000,
 });
 
 export const checkHealth = async () => {

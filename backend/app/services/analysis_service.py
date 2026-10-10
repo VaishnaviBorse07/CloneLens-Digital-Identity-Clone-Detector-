@@ -27,10 +27,12 @@ class AnalysisService:
             "final_prediction": fusion_out["final_prediction"],
             "authenticity_score_percent": fusion_out["authenticity_score_percent"],
             "confidence_percent": fusion_out["confidence_percent"],
+            "overall_risk": fusion_out.get("overall_risk", "Moderate"),
             "image_analysis": img_result,
             "text_analysis": None,
             "decision_fusion": fusion_out["decision_fusion"],
             "explanation": fusion_out["explanation"],
+            "key_insights": fusion_out.get("key_insights", []),
             "disclaimer": (
                 "This result is an AI-based probabilistic assessment generated for research and prototyping purposes. "
                 "It should not be treated as absolute verification."
@@ -88,10 +90,12 @@ class AnalysisService:
             "final_prediction": fusion_out["final_prediction"],
             "authenticity_score_percent": fusion_out["authenticity_score_percent"],
             "confidence_percent": fusion_out["confidence_percent"],
+            "overall_risk": fusion_out.get("overall_risk", "Moderate"),
             "image_analysis": None,
             "text_analysis": txt_result,
             "decision_fusion": fusion_out["decision_fusion"],
             "explanation": fusion_out["explanation"],
+            "key_insights": fusion_out.get("key_insights", []),
             "disclaimer": (
                 "This result is an AI-based probabilistic assessment generated for research and prototyping purposes. "
                 "It should not be treated as absolute verification."
@@ -150,10 +154,12 @@ class AnalysisService:
             "final_prediction": fusion_out["final_prediction"],
             "authenticity_score_percent": fusion_out["authenticity_score_percent"],
             "confidence_percent": fusion_out["confidence_percent"],
+            "overall_risk": fusion_out.get("overall_risk", "Moderate"),
             "image_analysis": img_result,
             "text_analysis": txt_result,
             "decision_fusion": fusion_out["decision_fusion"],
             "explanation": fusion_out["explanation"],
+            "key_insights": fusion_out.get("key_insights", []),
             "disclaimer": (
                 "This result is an AI-based probabilistic assessment generated for research and prototyping purposes. "
                 "It should not be treated as absolute verification."

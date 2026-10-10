@@ -73,7 +73,6 @@ def get_image_transforms(image_size: int = 224, is_train: bool = False):
 class FaceCloneDataset(Dataset):
     """
     Custom Dataset for loading Authentic (Class 0) and AI-Generated (Class 1) facial images.
-    Supports train, validation, and test splits with optional sample subsampling for fast training.
     """
     def __init__(
         self,

@@ -29,11 +29,27 @@ export default function VerificationForm({ onAnalyze, loading }) {
   const [isDragOver, setIsDragOver]   = useState(false);
   const fileInputRef = useRef(null);
 
-  // Set a lightweight default sample on first mount
+  const loadPresetFile = async (url, filename) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Preset fetch returned non-200');
+      const blob = await res.blob();
+      const file = new File([blob], filename, { type: 'image/jpeg' });
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onload = () => setImagePreview(reader.result);
+      reader.readAsDataURL(blob);
+      return file;
+    } catch (err) {
+      console.warn('Preset fetch fallback:', err);
+      return null;
+    }
+  };
+
+  // Pre-load authentic sample image on first mount
   useEffect(() => {
-    const defaultFile = new File(['dummy'], 'sample.jpg', { type: 'image/jpeg' });
-    setSelectedFile(defaultFile);
-    setImagePreview(SAMPLE_AVATAR_SVG);
+    loadPresetFile('/samples/authentic.jpg', 'authentic_portrait.jpg');
+    setInputText(HUMAN_SAMPLE_TEXT);
   }, []);
 
   const validateAndSetFile = (file) => {
@@ -69,19 +85,15 @@ export default function VerificationForm({ onAnalyze, loading }) {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleLoadAuthenticPreset = () => {
+  const handleLoadAuthenticPreset = async () => {
     setErrorMessage('');
-    const f = new File(['authentic'], 'authentic_portrait.jpg', { type: 'image/jpeg' });
-    setSelectedFile(f);
-    setImagePreview(SAMPLE_AVATAR_SVG);
+    await loadPresetFile('/samples/authentic.jpg', 'authentic_portrait.jpg');
     setInputText(HUMAN_SAMPLE_TEXT);
   };
 
-  const handleLoadClonePreset = () => {
+  const handleLoadClonePreset = async () => {
     setErrorMessage('');
-    const f = new File(['deepfake clone sample'], 'synthetic_clone.jpg', { type: 'image/jpeg' });
-    setSelectedFile(f);
-    setImagePreview(SAMPLE_AVATAR_SVG);
+    await loadPresetFile('/samples/clone.jpg', 'synthetic_clone.jpg');
     setInputText(AI_SAMPLE_TEXT);
   };
 
